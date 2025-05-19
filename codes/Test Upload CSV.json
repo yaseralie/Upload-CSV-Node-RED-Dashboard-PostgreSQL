@@ -1,0 +1,1231 @@
+[
+    {
+        "id": "414425cfb3470fc7",
+        "type": "tab",
+        "label": "Test Upload",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "e6ec0f0a.388198",
+        "type": "chunks-to-lines",
+        "z": "414425cfb3470fc7",
+        "name": "",
+        "nbLines": "4096",
+        "linesFormat": "csv",
+        "decoder": "UTF-8",
+        "x": 300,
+        "y": 100,
+        "wires": [
+            [
+                "436dce51.065f6"
+            ]
+        ]
+    },
+    {
+        "id": "436dce51.065f6",
+        "type": "csv",
+        "z": "414425cfb3470fc7",
+        "name": "",
+        "sep": ";",
+        "hdrin": true,
+        "hdrout": "none",
+        "multi": "mult",
+        "ret": "\\n",
+        "temp": "",
+        "skip": "0",
+        "strings": false,
+        "include_empty_strings": "",
+        "include_null_values": "",
+        "x": 490,
+        "y": 100,
+        "wires": [
+            [
+                "cd8f5ac7c31727ce"
+            ]
+        ]
+    },
+    {
+        "id": "4b31cec2.dad2c8",
+        "type": "ui_upload",
+        "z": "414425cfb3470fc7",
+        "group": "e1dcb0b7ca9ad45e",
+        "title": "Upload data to PostgreSQL",
+        "accept": ".csv",
+        "name": "uploadSql",
+        "order": 3,
+        "width": "12",
+        "height": "2",
+        "chunk": "256",
+        "transfer": "binary",
+        "x": 120,
+        "y": 100,
+        "wires": [
+            [
+                "e6ec0f0a.388198"
+            ]
+        ]
+    },
+    {
+        "id": "0ef915cbb69ea9bc",
+        "type": "postgrestor",
+        "z": "414425cfb3470fc7",
+        "name": "Insert data row",
+        "query": "INSERT INTO username(username, user_id, first_name, last_name) \nVALUES('{{msg.dataset.username}}','{{msg.dataset.user_id}}','{{msg.dataset.first_name}}','{{msg.dataset.last_name}}')",
+        "postgresDB": "89ae49c0f9d2a41f",
+        "output": true,
+        "outputs": 1,
+        "x": 1100,
+        "y": 180,
+        "wires": [
+            [
+                "c01625345d80f7b2"
+            ]
+        ]
+    },
+    {
+        "id": "d35c97c3b8076694",
+        "type": "loop",
+        "z": "414425cfb3470fc7",
+        "name": "",
+        "kind": "enum",
+        "count": "",
+        "initial": "1",
+        "step": "1",
+        "condition": "",
+        "conditionType": "js",
+        "when": "before",
+        "enumeration": "dataset",
+        "enumerationType": "msg",
+        "limit": "",
+        "loopPayload": "loop-index",
+        "finalPayload": "final-last",
+        "x": 850,
+        "y": 100,
+        "wires": [
+            [],
+            [
+                "1180933e2fbce672"
+            ]
+        ]
+    },
+    {
+        "id": "1180933e2fbce672",
+        "type": "change",
+        "z": "414425cfb3470fc7",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "dataset",
+                "pt": "msg",
+                "to": "$type(msg.loop.key) != \"undefined\" ?\tmsg.loop.key & \": \" & msg.loop.value :\tmsg.loop.value",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 460,
+        "y": 160,
+        "wires": [
+            [
+                "75ca0b44bef85cb1",
+                "d35c97c3b8076694"
+            ]
+        ]
+    },
+    {
+        "id": "75ca0b44bef85cb1",
+        "type": "postgrestor",
+        "z": "414425cfb3470fc7",
+        "name": "Check Data",
+        "query": "SELECT * FROM username where username='{{msg.dataset.username}}' and user_id='{{msg.dataset.user_id}}'",
+        "postgresDB": "89ae49c0f9d2a41f",
+        "output": true,
+        "outputs": 1,
+        "x": 650,
+        "y": 160,
+        "wires": [
+            [
+                "fa99fa9a479e6258"
+            ]
+        ]
+    },
+    {
+        "id": "fa99fa9a479e6258",
+        "type": "switch",
+        "z": "414425cfb3470fc7",
+        "name": "If Data Exist",
+        "property": "payload.rowCount",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "gte",
+                "v": "1",
+                "vt": "num"
+            },
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "num"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 850,
+        "y": 160,
+        "wires": [
+            [
+                "53827185e12fe8ac"
+            ],
+            [
+                "0ef915cbb69ea9bc"
+            ]
+        ]
+    },
+    {
+        "id": "cd8f5ac7c31727ce",
+        "type": "function",
+        "z": "414425cfb3470fc7",
+        "name": "Set dataset",
+        "func": "msg.dataset = msg.payload\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 650,
+        "y": 100,
+        "wires": [
+            [
+                "d35c97c3b8076694"
+            ]
+        ]
+    },
+    {
+        "id": "73276d1496256e1f",
+        "type": "ui_toast",
+        "z": "414425cfb3470fc7",
+        "position": "top right",
+        "displayTime": "5",
+        "highlight": "",
+        "sendall": true,
+        "outputs": 0,
+        "ok": "OK",
+        "cancel": "",
+        "raw": true,
+        "className": "",
+        "topic": "",
+        "name": "",
+        "x": 1270,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "53827185e12fe8ac",
+        "type": "template",
+        "z": "414425cfb3470fc7",
+        "name": "",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "html",
+        "syntax": "mustache",
+        "template": "Data already exist!<br>\nUsername: {{dataset.username}}<br>\nUser ID: {{dataset.user_id}}<br>",
+        "output": "str",
+        "x": 1080,
+        "y": 140,
+        "wires": [
+            [
+                "73276d1496256e1f"
+            ]
+        ]
+    },
+    {
+        "id": "c01625345d80f7b2",
+        "type": "link out",
+        "z": "414425cfb3470fc7",
+        "name": "link out 2",
+        "mode": "link",
+        "links": [
+            "8f49c34410b7e563"
+        ],
+        "x": 1235,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "8f49c34410b7e563",
+        "type": "link in",
+        "z": "414425cfb3470fc7",
+        "name": "link in 2",
+        "links": [
+            "c01625345d80f7b2",
+            "a875c5b82ffe1e49"
+        ],
+        "x": 75,
+        "y": 360,
+        "wires": [
+            [
+                "d5df341639f60888",
+                "20485b2707d1273b"
+            ]
+        ]
+    },
+    {
+        "id": "d5df341639f60888",
+        "type": "postgrestor",
+        "z": "414425cfb3470fc7",
+        "name": "Select Data",
+        "query": "SELECT * FROM username",
+        "postgresDB": "89ae49c0f9d2a41f",
+        "output": true,
+        "outputs": 1,
+        "x": 310,
+        "y": 360,
+        "wires": [
+            [
+                "e61be42e78f5f190"
+            ]
+        ]
+    },
+    {
+        "id": "e61be42e78f5f190",
+        "type": "function",
+        "z": "414425cfb3470fc7",
+        "name": "create array",
+        "func": "\nvar i;\nvar list_data = [];\nfor (i = 0; i < msg.payload.rows.length; i++) \n{\n  list_data.push({\"No\":i+1,\"Username\":msg.payload.rows[i]['username'],\n  \"User ID\":msg.payload.rows[i]['user_id'],\"First Name\":msg.payload.rows[i]['first_name'],\n    \"Last Name\":msg.payload.rows[i]['last_name']});\n}\n\nmsg.payload = list_data;\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 490,
+        "y": 360,
+        "wires": [
+            [
+                "cdfb58ebf9c66625"
+            ]
+        ]
+    },
+    {
+        "id": "e1d137d5d2b7699d",
+        "type": "change",
+        "z": "414425cfb3470fc7",
+        "name": "Reset chart",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "[]",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 490,
+        "y": 300,
+        "wires": [
+            [
+                "cdfb58ebf9c66625"
+            ]
+        ]
+    },
+    {
+        "id": "054d57390b39d379",
+        "type": "inject",
+        "z": "414425cfb3470fc7",
+        "name": "Init empty",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "false",
+        "payloadType": "bool",
+        "x": 340,
+        "y": 300,
+        "wires": [
+            [
+                "e1d137d5d2b7699d"
+            ]
+        ]
+    },
+    {
+        "id": "cdfb58ebf9c66625",
+        "type": "ui_table",
+        "z": "414425cfb3470fc7",
+        "group": "22aa21ceafb36827",
+        "name": "",
+        "order": 0,
+        "width": "14",
+        "height": "6",
+        "columns": [],
+        "outputs": 1,
+        "cts": true,
+        "x": 670,
+        "y": 360,
+        "wires": [
+            [
+                "577f743832d764de",
+                "64ef89ce7d0ece1b",
+                "69d6cda3064b36c5"
+            ]
+        ]
+    },
+    {
+        "id": "69d6cda3064b36c5",
+        "type": "ui_form",
+        "z": "414425cfb3470fc7",
+        "name": "Update Data",
+        "label": "",
+        "group": "6908a6040e4b5de4",
+        "order": 2,
+        "width": "14",
+        "height": "5",
+        "options": [
+            {
+                "label": "Username",
+                "value": "Username",
+                "type": "text",
+                "required": true,
+                "rows": null
+            },
+            {
+                "label": "User ID",
+                "value": "User ID",
+                "type": "text",
+                "required": true,
+                "rows": null
+            },
+            {
+                "label": "First Name",
+                "value": "First Name",
+                "type": "text",
+                "required": true,
+                "rows": null
+            },
+            {
+                "label": "Last Name",
+                "value": "Last Name",
+                "type": "text",
+                "required": true,
+                "rows": null
+            }
+        ],
+        "formValue": {
+            "Username": "",
+            "User ID": "",
+            "First Name": "",
+            "Last Name": ""
+        },
+        "payload": "",
+        "submit": "Update",
+        "cancel": "Cancel",
+        "topic": "topic",
+        "topicType": "msg",
+        "splitLayout": "",
+        "className": "",
+        "x": 230,
+        "y": 600,
+        "wires": [
+            [
+                "1e6ece86eacb5af7"
+            ]
+        ]
+    },
+    {
+        "id": "1e6ece86eacb5af7",
+        "type": "change",
+        "z": "414425cfb3470fc7",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "username_update",
+                "pt": "msg",
+                "to": "payload['Username']",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "user_id_update",
+                "pt": "msg",
+                "to": "payload['User ID']",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "first_name",
+                "pt": "msg",
+                "to": "payload['First Name']",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "last_name",
+                "pt": "msg",
+                "to": "payload['Last Name']",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "username",
+                "pt": "msg",
+                "to": "username",
+                "tot": "flow"
+            },
+            {
+                "t": "set",
+                "p": "user_id",
+                "pt": "msg",
+                "to": "user_id",
+                "tot": "flow"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 420,
+        "y": 600,
+        "wires": [
+            [
+                "632006a543f6f3a6"
+            ]
+        ]
+    },
+    {
+        "id": "2b63100dcf6350df",
+        "type": "comment",
+        "z": "414425cfb3470fc7",
+        "name": "Upload CSV file and insert to database",
+        "info": "",
+        "x": 210,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "6ffb09e5b58e2db7",
+        "type": "comment",
+        "z": "414425cfb3470fc7",
+        "name": "Show data in a table",
+        "info": "",
+        "x": 150,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "8767c1531a984e0f",
+        "type": "comment",
+        "z": "414425cfb3470fc7",
+        "name": "Update selected data from table",
+        "info": "",
+        "x": 190,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "577f743832d764de",
+        "type": "function",
+        "z": "414425cfb3470fc7",
+        "name": "Get selected",
+        "func": "msg.payload = msg.payload['Username'] + \", \" + msg.payload['User ID']\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 850,
+        "y": 420,
+        "wires": [
+            [
+                "97821f414b7f061d"
+            ]
+        ]
+    },
+    {
+        "id": "64ef89ce7d0ece1b",
+        "type": "change",
+        "z": "414425cfb3470fc7",
+        "name": "Set for selected flow variable",
+        "rules": [
+            {
+                "t": "set",
+                "p": "username",
+                "pt": "flow",
+                "to": "payload['Username']",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "user_id",
+                "pt": "flow",
+                "to": "payload['User ID']",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 900,
+        "y": 360,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "97821f414b7f061d",
+        "type": "ui_text",
+        "z": "414425cfb3470fc7",
+        "group": "6908a6040e4b5de4",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Selected Username, User ID: ",
+        "format": "{{msg.payload}}",
+        "layout": "row-left",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 1080,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "632006a543f6f3a6",
+        "type": "switch",
+        "z": "414425cfb3470fc7",
+        "name": "Check Username",
+        "property": "username_update",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "neq",
+                "v": "username",
+                "vt": "msg"
+            },
+            {
+                "t": "eq",
+                "v": "username",
+                "vt": "msg"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 630,
+        "y": 600,
+        "wires": [
+            [
+                "d2203fd6f8d441a4"
+            ],
+            [
+                "179f7bc8f70795c5"
+            ]
+        ]
+    },
+    {
+        "id": "179f7bc8f70795c5",
+        "type": "switch",
+        "z": "414425cfb3470fc7",
+        "name": "Check User ID",
+        "property": "user_id_update",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "neq",
+                "v": "user_id",
+                "vt": "msg"
+            },
+            {
+                "t": "eq",
+                "v": "user_id",
+                "vt": "msg"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 840,
+        "y": 700,
+        "wires": [
+            [
+                "392c646dcb56d7db"
+            ],
+            [
+                "14e2c55c1fb953ee"
+            ]
+        ]
+    },
+    {
+        "id": "d2203fd6f8d441a4",
+        "type": "postgrestor",
+        "z": "414425cfb3470fc7",
+        "name": "Check username",
+        "query": "SELECT * FROM username where username='{{msg.username_update}}'",
+        "postgresDB": "89ae49c0f9d2a41f",
+        "output": true,
+        "outputs": 1,
+        "x": 850,
+        "y": 560,
+        "wires": [
+            [
+                "960b5839fdfb47a3"
+            ]
+        ]
+    },
+    {
+        "id": "960b5839fdfb47a3",
+        "type": "switch",
+        "z": "414425cfb3470fc7",
+        "name": "If Data Exist",
+        "property": "payload.rowCount",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "gte",
+                "v": "1",
+                "vt": "num"
+            },
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "num"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 1050,
+        "y": 560,
+        "wires": [
+            [
+                "bf173330d63570a0"
+            ],
+            [
+                "179f7bc8f70795c5"
+            ]
+        ]
+    },
+    {
+        "id": "bf173330d63570a0",
+        "type": "template",
+        "z": "414425cfb3470fc7",
+        "name": "",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "html",
+        "syntax": "mustache",
+        "template": "Data already exist!<br>\nUsername: {{msg.username}}",
+        "output": "str",
+        "x": 1260,
+        "y": 480,
+        "wires": [
+            [
+                "faf775953c0c17f6"
+            ]
+        ]
+    },
+    {
+        "id": "faf775953c0c17f6",
+        "type": "ui_toast",
+        "z": "414425cfb3470fc7",
+        "position": "top right",
+        "displayTime": "5",
+        "highlight": "",
+        "sendall": true,
+        "outputs": 0,
+        "ok": "OK",
+        "cancel": "",
+        "raw": true,
+        "className": "",
+        "topic": "",
+        "name": "",
+        "x": 1450,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "14e2c55c1fb953ee",
+        "type": "postgrestor",
+        "z": "414425cfb3470fc7",
+        "name": "UPDATE",
+        "query": "UPDATE username set username='{{msg.username_update}}',user_id='{{msg.user_id_update}}',\nfirst_name='{{msg.first_name}}', last_name='{{msg.last_name}}'\nwhere username='{{msg.username}}' and user_id='{{msg.user_id}}'",
+        "postgresDB": "89ae49c0f9d2a41f",
+        "output": true,
+        "outputs": 1,
+        "x": 1420,
+        "y": 720,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b92ab375bd214b40",
+        "type": "template",
+        "z": "414425cfb3470fc7",
+        "name": "",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "html",
+        "syntax": "mustache",
+        "template": "Data already exist!<br>\nUser ID: {{msg.user_id}}",
+        "output": "str",
+        "x": 1260,
+        "y": 520,
+        "wires": [
+            [
+                "faf775953c0c17f6"
+            ]
+        ]
+    },
+    {
+        "id": "392c646dcb56d7db",
+        "type": "postgrestor",
+        "z": "414425cfb3470fc7",
+        "name": "Check User ID",
+        "query": "SELECT * FROM username where user_id='{{msg.user_id}}'",
+        "postgresDB": "89ae49c0f9d2a41f",
+        "output": true,
+        "outputs": 1,
+        "x": 1060,
+        "y": 660,
+        "wires": [
+            [
+                "8b27d0fd97956fb2"
+            ]
+        ]
+    },
+    {
+        "id": "8b27d0fd97956fb2",
+        "type": "switch",
+        "z": "414425cfb3470fc7",
+        "name": "If Data Exist",
+        "property": "payload.rowCount",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "gte",
+                "v": "1",
+                "vt": "num"
+            },
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "num"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 1230,
+        "y": 660,
+        "wires": [
+            [
+                "b92ab375bd214b40"
+            ],
+            [
+                "14e2c55c1fb953ee"
+            ]
+        ]
+    },
+    {
+        "id": "f5ebfddffb4bbca8",
+        "type": "ui_button",
+        "z": "414425cfb3470fc7",
+        "name": "",
+        "group": "22aa21ceafb36827",
+        "order": 1,
+        "width": "4",
+        "height": "1",
+        "passthru": false,
+        "label": "Refresh Table",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 140,
+        "y": 280,
+        "wires": [
+            [
+                "d5df341639f60888"
+            ]
+        ]
+    },
+    {
+        "id": "a512c77ee80ee381",
+        "type": "ui_button",
+        "z": "414425cfb3470fc7",
+        "name": "",
+        "group": "6908a6040e4b5de4",
+        "order": 3,
+        "width": "14",
+        "height": "1",
+        "passthru": false,
+        "label": "Delete Data",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "red",
+        "className": "",
+        "icon": "",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 130,
+        "y": 820,
+        "wires": [
+            [
+                "25bf7671a31ab9e5"
+            ]
+        ]
+    },
+    {
+        "id": "25bf7671a31ab9e5",
+        "type": "change",
+        "z": "414425cfb3470fc7",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "username",
+                "pt": "msg",
+                "to": "username",
+                "tot": "flow"
+            },
+            {
+                "t": "set",
+                "p": "user_id",
+                "pt": "msg",
+                "to": "user_id",
+                "tot": "flow"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 340,
+        "y": 820,
+        "wires": [
+            [
+                "052a54b136d8b64c"
+            ]
+        ]
+    },
+    {
+        "id": "052a54b136d8b64c",
+        "type": "postgrestor",
+        "z": "414425cfb3470fc7",
+        "name": "DELETE",
+        "query": "DELETE FROM username\nwhere username='{{msg.username}}' and user_id='{{msg.user_id}}'",
+        "postgresDB": "89ae49c0f9d2a41f",
+        "output": true,
+        "outputs": 1,
+        "x": 540,
+        "y": 820,
+        "wires": [
+            [
+                "a875c5b82ffe1e49",
+                "d2c579a63b31a1d9"
+            ]
+        ]
+    },
+    {
+        "id": "a875c5b82ffe1e49",
+        "type": "link out",
+        "z": "414425cfb3470fc7",
+        "name": "link out 3",
+        "mode": "link",
+        "links": [
+            "0c4ad2f7919bb741",
+            "8f49c34410b7e563"
+        ],
+        "x": 675,
+        "y": 820,
+        "wires": []
+    },
+    {
+        "id": "f2f891adfed4b6fb",
+        "type": "comment",
+        "z": "414425cfb3470fc7",
+        "name": "Delete selected data from table",
+        "info": "",
+        "x": 190,
+        "y": 780,
+        "wires": []
+    },
+    {
+        "id": "562fb479ce7fb840",
+        "type": "ui_toast",
+        "z": "414425cfb3470fc7",
+        "position": "top right",
+        "displayTime": "5",
+        "highlight": "",
+        "sendall": true,
+        "outputs": 0,
+        "ok": "OK",
+        "cancel": "",
+        "raw": true,
+        "className": "",
+        "topic": "",
+        "name": "",
+        "x": 930,
+        "y": 860,
+        "wires": []
+    },
+    {
+        "id": "d2c579a63b31a1d9",
+        "type": "function",
+        "z": "414425cfb3470fc7",
+        "name": "function 1",
+        "func": "msg.payload = \"Command: \" + msg.payload.command + \", \" + \"Affected Row: \" + msg.payload.rowCount\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 720,
+        "y": 860,
+        "wires": [
+            [
+                "562fb479ce7fb840"
+            ]
+        ]
+    },
+    {
+        "id": "712887232d3b3c6d",
+        "type": "change",
+        "z": "414425cfb3470fc7",
+        "name": "Set Blank",
+        "rules": [
+            {
+                "t": "set",
+                "p": "username",
+                "pt": "flow",
+                "to": "",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "user_id",
+                "pt": "flow",
+                "to": "",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 860,
+        "y": 460,
+        "wires": [
+            [
+                "97821f414b7f061d"
+            ]
+        ]
+    },
+    {
+        "id": "0c4ad2f7919bb741",
+        "type": "link in",
+        "z": "414425cfb3470fc7",
+        "name": "link in 3",
+        "links": [
+            "a875c5b82ffe1e49"
+        ],
+        "x": 685,
+        "y": 460,
+        "wires": [
+            [
+                "712887232d3b3c6d"
+            ]
+        ]
+    },
+    {
+        "id": "5bb385f5a7038c75",
+        "type": "inject",
+        "z": "414425cfb3470fc7",
+        "name": "Init",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "1",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 710,
+        "y": 500,
+        "wires": [
+            [
+                "712887232d3b3c6d"
+            ]
+        ]
+    },
+    {
+        "id": "20485b2707d1273b",
+        "type": "change",
+        "z": "414425cfb3470fc7",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload['Username']",
+                "pt": "msg",
+                "to": "",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "payload['User ID']",
+                "pt": "msg",
+                "to": "",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "payload['First Name']",
+                "pt": "msg",
+                "to": "",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "payload['Last Name']",
+                "pt": "msg",
+                "to": "",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 180,
+        "y": 460,
+        "wires": [
+            [
+                "69d6cda3064b36c5"
+            ]
+        ]
+    },
+    {
+        "id": "e1dcb0b7ca9ad45e",
+        "type": "ui_group",
+        "name": "Upload CSV",
+        "tab": "dc866f1ddfcb5cff",
+        "order": 1,
+        "disp": true,
+        "width": "14",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "89ae49c0f9d2a41f",
+        "type": "postgresDB",
+        "name": "test",
+        "host": "127.0.0.1",
+        "hostFieldType": "str",
+        "port": "5432",
+        "portFieldType": "num",
+        "database": "test",
+        "databaseFieldType": "str",
+        "ssl": "false",
+        "sslFieldType": "bool",
+        "max": "10",
+        "maxFieldType": "num",
+        "min": "1",
+        "minFieldType": "num",
+        "idle": "1000",
+        "idleFieldType": "num",
+        "connectionTimeout": "10000",
+        "connectionTimeoutFieldType": "num",
+        "user": "postgres",
+        "userFieldType": "str",
+        "password": "123",
+        "passwordFieldType": "str"
+    },
+    {
+        "id": "22aa21ceafb36827",
+        "type": "ui_group",
+        "name": "View Data",
+        "tab": "dc866f1ddfcb5cff",
+        "order": 2,
+        "disp": true,
+        "width": "14",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "6908a6040e4b5de4",
+        "type": "ui_group",
+        "name": "Update Data",
+        "tab": "dc866f1ddfcb5cff",
+        "order": 3,
+        "disp": true,
+        "width": "14",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "dc866f1ddfcb5cff",
+        "type": "ui_tab",
+        "name": "Upload",
+        "icon": "dashboard",
+        "order": 13,
+        "disabled": false,
+        "hidden": false
+    }
+]
